@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+sudo mkdir -p /usr/local/vroom
+
+# vroom symlinks
+vroom_path="/usr/local/vroom"
+vroom_passenger_module="$vroom_path/mod_passenger.so"
+vroom_passenger_root="$vroom_path/passenger"
+vroom_passenger_ruby="$vroom_path/ruby"
+
+# YOU MAY NEED TO CUSTOMIZE THIS TO YOUR SPECIFIC SYSTEM RUBY INSTALL!
+# system ruby links
+if [ "$rvm_ruby_string" == "system" ]
+then
+  rvm_ruby_gem_home="/usr/local/lib/ruby/gems/1.8"
+  rvm_ruby_home="/usr/local"
+  rvm_ruby_wrapper="/usr/local/bin/ruby"
+else
+  rvm_ruby_wrapper="$rvm_path/wrappers/$rvm_ruby_string"
+  if [ "$rvm_gemset_name" != "" ]
+  then
+    rvm_ruby_wrapper="$rvm_ruby_wrapper@$rvm_gemset_name"
+  fi
+  rvm_ruby_wrapper="$rvm_ruby_wrapper/ruby"
+fi
+
+# passenger version
+# NOTES: 
+# This will automatically use the newest version of the passenger gem installed
+# Also, this script assumes that the 'find' command always returns results 
+#   properly sorted (ie. 2.1.1 is before 3.0.8) - I have no idea if this is true.
+passenger_gems=($(
+  find "$rvm_ruby_gem_home/gems" -iname 'passenger-*' -type d
+))
+num_passengers=${#passenger_gems[@]}
+
+if [ $num_passengers -eq 0 ]
+then
+  echo "You don't have the passenger installed for this RVM Ruby. Try this:"
+  echo "  $ gem install passenger"
+  echo "  $ passenger-install-apache2-module"
+  echo "  $ rmv use $rvm_ruby_string"
+else
+  # okay to proceed w/ symlinking and restart
+  passenger_root=${passenger_gems[$num_passengers-1]}
+  passenger_module="$passenger_root/ext/apache2/mod_passenger.so"
+  
+  # unlink previous
+  sudo unlink -f "$vroom_passenger_module"
+  sudo unlink -f "$vroom_passenger_root"
+  sudo unlink -f "$vroom_passenger_ruby"
+  
+  # symlink new 
+  sudo ln -s "$passenger_module" "$vroom_passenger_module"
+  sudo ln -s "$passenger_root" "$vroom_passenger_root"
+  sudo ln -s "$rvm_ruby_wrapper" "$vroom_passenger_ruby"
+  
+  # restart apache
+  sudo /usr/sbin/apachectl restart
+fi

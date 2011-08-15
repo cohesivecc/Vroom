@@ -1,0 +1,86 @@
+= Vroom
+* http://github.com/cohesivecc/Vroom
+
+== DESCRIPTION:
+
+This is a *highly experimental* script for running RVM, Phusion Passenger and Ruby on Rails in
+a local development environment. Basically we get around the whole proxying of Passenger to multiple
+Ruby versions by simply symlinking to the necessary Passenger install and restarting Apache any time
+we switch between Ruby versions. Because we typically have to call `rvm use X.X.X` when switching 
+between projects anyway (Rails console, Bundler etc.), this simple RVM after_use hook takes care of
+ensuring that the proper version of Ruby is served locally for that app.
+
+== WORKFLOW:
+
+    cd /my/ruby-1.8.7/rails-2.3.8/app
+    rvm use 1.8.7-head@rails238
+  
+  Apache is now serving requests with Ruby 1.8.7, using the @rails238 gemset
+  
+    cd /my/ruby-1.9.2/rails-3.0.9/app
+    rvm use 1.9.2-head@rails309
+  
+  Apache is now serving requests with Ruby 1.9.2, using the @rails309 gemset
+  
+    cd /my/system-ruby/rails-2.1.1/app
+    rvm use system
+  
+  Apache is now serving requests with your system Ruby and system gems
+
+== DEPENDENCIES:
+
+* {RVM}[http://beginrescueend.com/] (Note: Version >= 1.6.25)
+* {Phusion Passenger}[http://www.modrails.com/]
+
+== INSTALL:
+
+1. Install whichever Ruby you need via RVM:
+  
+    rvm install 1.9.2-head
+    rvm use 1.9.2-head
+  
+2. Install the Passenger gem for that Ruby (and Gemset if desired):
+  
+    rvm gemset create heavyset
+    rvm use 1.9.2-head@heavyset
+    gem install passenger
+  
+3. Install the Apache module:
+
+    passenger-install-apache2-module
+  
+  * Disregard the standard LoadModule config that Passenger recommends. Instead, use the contents of passenger.conf
+
+4. Copy after_use_vroom into ~/.rvm/hooks and make sure it's executable:
+
+    chmod 755 ~/.rvm/hooks/after_use_vroom
+
+5. Update after_use_vroom with the proper paths to your system ruby installation:
+
+    rvm_ruby_gem_home="/usr/local/lib/ruby/gems/1.8"
+    rvm_ruby_home="/usr/local"
+    rvm_ruby_wrapper="/usr/local/bin/ruby"
+  
+
+== LICENSE:
+
+Copyright (c) 2011 Arend Miller, Neal White, Cohesive Creative and Code, Inc.
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

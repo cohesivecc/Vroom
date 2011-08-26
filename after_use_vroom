@@ -39,16 +39,16 @@ then
   echo "You don't have the passenger installed for this RVM Ruby. Try this:"
   echo "  $ gem install passenger"
   echo "  $ passenger-install-apache2-module"
-  echo "  $ rmv use $rvm_ruby_string"
+  echo "  $ rvm use $rvm_ruby_string"
 else
   # okay to proceed w/ symlinking and restart
   passenger_root=${passenger_gems[$num_passengers-1]}
   passenger_module="$passenger_root/ext/apache2/mod_passenger.so"
   
   # unlink previous
-  sudo unlink -f "$vroom_passenger_module"
-  sudo unlink -f "$vroom_passenger_root"
-  sudo unlink -f "$vroom_passenger_ruby"
+  sudo rm -f "$vroom_passenger_module"
+  sudo rm -f "$vroom_passenger_root"
+  sudo rm -f "$vroom_passenger_ruby"
   
   # symlink new 
   sudo ln -s "$passenger_module" "$vroom_passenger_module"
